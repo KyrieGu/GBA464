@@ -1,0 +1,10 @@
+Variable definitions for Assignment 1
+Yufeng Huang
+
+(time 		= 1994)
+(observation	= zip code, masked)
+population 	= population (1994, zip code level)
+numATMs 	= number of ATMs
+ATMwithdr	= number of withdrawal per resident
+withdrvalue	= amount per withdrawal
+unemprate	= unemployment rate

@@ -59,8 +59,8 @@ df <- df[df$cla == "standard" | df$cla == "intermediate" | df$cla == "luxury",]
 
 
 #calculate mpg
-mpg <- 235.15 / df$li
-mpg
+mpg <- 235.215 / df$li
+head(mpg)
 
 #add $mpg column
 df <- cbind(df,mpg)
@@ -83,7 +83,7 @@ head(oil)
 
 #calculate average
 avg_mpg_by_year <- aggregate(formula = mpg ~ frm + ye, data = df, FUN = mean)
-avg_mpg_by_year
+head(avg_mpg_by_year)
 
 # 
 # ggplot(avg_mpg_by_year[avg_mpg_by_year$frm == "VW",], aes(ye, mpg)) +
@@ -117,7 +117,7 @@ plot(x = avg_mpg_by_year$ye[avg_mpg_by_year$frm == "VW"],
 
 #1) Merge avg with oil
 avg_with_price <- merge(avg_mpg_by_year,oil, by = "ye")
-avg_with_price
+head(avg_with_price)
 
 
 #2) 
@@ -132,7 +132,8 @@ plot(x = avg_mpg_by_year$ye[avg_mpg_by_year$frm == "VW"],
 axis(side = 4)
 par(new = F)
 
-#add a vertical line to show1985
+#3)
+#add a vertical line to show 1985
 abline(v = 85, col = "red", lty = 2)
 
 
@@ -156,16 +157,36 @@ abline(v = 85, col = "red", lty = 2)
 # 4) [Optional] Generate the same plot as in Question 3, but now focusing on the "new cars" that we defined above. 
 
 
+#1) Find the first year where a specific car model has sales
+introduction <- aggregate(formula = ye ~ type + ma, data = df[df$frm == "VW",], FUN = min)
+head(introduction)
 
+#merge and assign
+df.agument <- merge(introduction,df, by = c("type","ma","ye"))
+head(df.agument)
 
+#2)sub-data frame
+#define a function to filter first two years
+#first merge
+df.min <- aggregate(formula = ye ~ type, data = df.agument, FUN = min)
+temp <- merge(df.min,df[df$frm == "VW",], by = "type")
+df.new <- subset(temp, ye.y <= ye.x + 1)
+colnames(df.new)[2:3] <- c("Introduction","ye")
+head(df.new)
 
+#3)$mpg
+avg_by_year <- aggregate(formula = mpg ~ type + ye, data = df.new, FUN = mean)
+head(avg_by_year)
 
+#4) plot new cars
+par(new = T)
+plot(x = df.min$ye,
+     y = df.min$mpg,
+     type = 'l', xlab = "", ylab = "", 
+     col = 7,
+     axes=FALSE)
+par(new = F)
 
-
-
-
-
-
-
-
+#add legend to make it clearer
+legend("topright", legend = c("All VW", "Price","New Cars"), col = c(3,4,7), pch = 16)
 

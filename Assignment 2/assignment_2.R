@@ -82,21 +82,26 @@ head(oil)
 #   "Volkswagen fuel efficiency"
 
 #calculate average
-avg_mpg_by_year <- aggregate(formula = mpg ~ frm + ye, data = df[df$frm == "VW",], FUN = mean)
+avg_mpg_by_year <- aggregate(formula = mpg ~ frm + ye, data = df, FUN = mean)
 avg_mpg_by_year
 
-typeof(avg_mpg_by_year)
+# 
+# ggplot(avg_mpg_by_year[avg_mpg_by_year$frm == "VW",], aes(ye, mpg)) +
+#   geom_point(aes(color = ye)) +
+#   labs(
+#     x = "year",
+#     y = "mile per gallon",
+#     title = "Volkswagen fuel efficiency"
+#   ) +
+#   scale_x_continuous(breaks = seq(70,100, by = 5))
 
-ggplot(avg_mpg_by_year, aes(ye, mpg)) +
-  geom_point(aes(color = ye)) +
-  labs(
-    x = "year",
-    y = "mile per gallon",
-    title = "Volkswagen fuel efficiency"
-  ) +
-  scale_x_continuous(breaks = seq(70,100, by = 5))
-
-
+#using plot
+plot(x = avg_mpg_by_year$ye[avg_mpg_by_year$frm == "VW"], 
+     y = avg_mpg_by_year$mpg[avg_mpg_by_year$frm == "VW"],
+     type = 'l',
+     col = 3,
+     xlab = "year", ylab = "mile per gallon",
+     main = "Volkswagen fuel efficiency")
 
 
 
@@ -110,11 +115,25 @@ ggplot(avg_mpg_by_year, aes(ye, mpg)) +
 #   Add a vertical line in the year 1985 to indicate this (search help lty or col for line type or 
 #   color; adjust them so that the graph does not look that busy)
 
+#1) Merge avg with oil
+avg_with_price <- merge(avg_mpg_by_year,oil, by = "ye")
+avg_with_price
 
 
+#2) 
+#accept new plot
+par(new = T)
+#plot VW graph with oil price
+plot(x = avg_mpg_by_year$ye[avg_mpg_by_year$frm == "VW"],
+     y = avg_with_price$oilpr[avg_with_price$frm == "VW"],
+     type = 'l', xlab = "", ylab = "", 
+     col = 4,
+     axes=FALSE)
+axis(side = 4)
+par(new = F)
 
-
-
+#add a vertical line to show1985
+abline(v = 85, col = "red", lty = 2)
 
 
 

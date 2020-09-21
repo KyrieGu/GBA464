@@ -168,25 +168,25 @@ head(df.agument)
 #2)sub-data frame
 #define a function to filter first two years
 #first merge
-df.min <- aggregate(formula = ye ~ type, data = df.agument, FUN = min)
-temp <- merge(df.min,df[df$frm == "VW",], by = "type")
+df.min <- aggregate(formula = ye ~ type + ma, data = df.agument, FUN = min)
+temp <- merge(df.min,df[df$frm == "VW",], by = c("type","ma"))
 df.new <- subset(temp, ye.y <= ye.x + 1)
-colnames(df.new)[2:3] <- c("Introduction","ye")
+colnames(df.new)[3:4] <- c("Introduction","ye")
 head(df.new)
 
 #3)$mpg
-avg_by_year <- aggregate(formula = mpg ~ type + ye, data = df.new, FUN = mean)
+avg_by_year <- aggregate(formula = mpg ~ ye, data = df.new, FUN = mean)
 head(avg_by_year)
 
 #4) plot new cars
 par(new = T)
-plot(x = df.min$ye,
-     y = df.min$mpg,
+plot(x = avg_by_year$ye,
+     y = avg_by_year$mpg,
      type = 'l', xlab = "", ylab = "", 
      col = 7,
      axes=FALSE)
 par(new = F)
 
 #add legend to make it clearer
-legend("topright", legend = c("All VW", "Price","New Cars"), col = c(3,4,7), pch = 16)
-
+legend("topright", legend = c("All VW", "Price","New Cars"), col = c(3,4,7), 
+       pch = 16, cex = 0.45)

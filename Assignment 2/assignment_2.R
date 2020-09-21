@@ -158,7 +158,7 @@ abline(v = 85, col = "red", lty = 2)
 
 
 #1) Find the first year where a specific car model has sales
-introduction <- aggregate(formula = ye ~ type + ma, data = df[df$frm == "VW",], FUN = min)
+introduction <- aggregate(formula = ye ~ type + ma, data = df[df$frm == "VW" & df$qu > 0,], FUN = min)
 head(introduction)
 
 #merge and assign

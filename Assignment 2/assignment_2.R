@@ -179,9 +179,10 @@ avg_by_year <- aggregate(formula = mpg ~ ye, data = df.new, FUN = mean)
 head(avg_by_year)
 
 #4) plot new cars
+avg_price <- merge(avg_by_year,avg_with_price, by = "ye")
 par(new = T)
-plot(x = avg_by_year$ye,
-     y = avg_by_year$mpg,
+plot(x = avg_price$ye,
+     y = avg_price$oilpr,
      type = 'l', xlab = "", ylab = "", 
      col = 7,
      axes=FALSE)

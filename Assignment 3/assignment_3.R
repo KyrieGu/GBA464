@@ -124,12 +124,18 @@ for (id in 1:max(df$id)){
 #   Next, let's define frequency purchase occasions in PAST QUARTER
 #   Call this df$frequency
 
+#define quarter list
+q <- list(c(1,2,3), c(4,5,6), c(7,8,9), c(10,11,12))
+df$quarter[df$month == q[[1]]] <- 1
+df$quarter[df$month == q[[2]]] <- 2
+df$quarter[df$month == q[[3]]] <- 3
+df$quarter[df$month == q[[4]]] <- 4
+names(q) <- c("q1","q2","q3","q4")
+
 #construct df$recency
 df$frequency <- NA
 
-#define quarter list
-q <- list(c(1,2,3), c(4,5,6), c(7,8,9), c(10,11,12))
-names(q) <- c("q1","q2","q3","q4")
+
 
 #loop through every id
 for (id in 1:max(df$id)){
@@ -165,15 +171,42 @@ for (id in 1:max(df$id)){
 
 
 
-
-
 # ====== Section 3.3: monetary value ======
 # average monthly expenditure in the months with trips (i.e. when expenditure is nonzero)
 #   for each individual in each month, find the average expenditure from the beginning to 
 #   the PAST MONTH. Call this df$monvalue
-
-
-
+df$monvalue <- NA
+for(id in 1:max(df$id)){
+  
+  #count how many months has made purchased
+  count <- 0
+  
+  #initialize average
+  average <- 0
+  
+  #initialize the sum
+  s <- 0
+  
+  for (y in c(1997,1998)) {
+    #loop through every month
+    for(m in 1:12){
+      if (average > 0) {
+        df$monvalue[df$id == id & df$year == y & df$month == m] <- average 
+      }
+      
+      if(length(df[df$id == id & df$year == y & df$month == m, "expd"]) > 0){
+        if(df[df$id == id & df$year == y & df$month == m, "expd"] > 0) {
+          count <- count + 1
+          s <- s + df$expd[df$id == id & df$year == y & df$month == m]
+        }
+      }
+      if(count > 0){
+        #calculate average
+        average <- s / count
+      }
+    }
+  }
+}
 
 
 
@@ -196,8 +229,23 @@ df$index <- b1*df$recency + b2*df$frequency + b3*df$monvalue
 #   the RFM index; second group is 10%-20%, etc.
 # Make a bar plot on the expected per-trip revenue that these consumers generate and comment on 
 #   whether the RFM index help you segment which set of customers are "more valuable"
+#sort
+df_sort <- df[order(df$index),]
+#Split into 10 groups 
+quant <- quantile(df_sort$index,probs = seq(0,1,0.1), na.rm = TRUE)
+df_sort$group <- 0
+for (i in 1:(length(quant)-1)) {
+  left <- quant[[i]]
+  right <- quant[[i+1]]
+  df_sort$group[df_sort$index > left & df_sort$index < right] <- i
+}
 
+#calculate the average expenditure
+avg_expd <- aggregate(expd ~ group, data = df_sort, FUN = mean)
 
-
-
+#plot
+barplot(expd ~ group, data = avg_expd,
+        xlab = "deciles in the RFM indexes", ylab = "Average Expenditure",
+        main = "Average Expenditure by Deciles in RFM Index",
+        ylim = c(0,20))
 

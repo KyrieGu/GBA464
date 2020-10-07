@@ -25,7 +25,8 @@ df.raw[[1]] <- NULL # drop old id
 names(df.raw) <- c("id", "date", "qty", "expd")
 
 # a) generate year and month
- 
+#clean up the data
+df.raw <- na.omit(df.raw)
 #convert date to string
 df.raw$date <- as.character(df.raw$date)
 
@@ -61,7 +62,9 @@ head(df)
 #   but you might need to have these periods when you calculate RFM, right?
 # Consider expanding the time frame using expand.grid() but you do not have to.
 #construct table of year-months
-df_new <- expand.grid(id = seq(1,1000,1), year = seq(1997,1998,1),month = seq(01,12,1))
+df_new <- expand.grid(id = seq(1,1000,1), year = 1997, month = seq(01,12,1))
+df_new <- merge(df_new, expand.grid(id = seq(1,1000,1), year = 1998, month = seq(1,6,1)),
+                by = c("id","year","month"), all = TRUE)
 
 #format month in df
 df$month <- as.integer(df$month)
@@ -71,12 +74,11 @@ df <- merge(df,df_new, by = c("id","year","month"), all = TRUE)
 
 #sort again
 df <- df[with(df,order(id,year,month)),]
-#result
-head(df)
 
 #replace all NA with 0
 df[is.na(df)] <- 0
-
+#result
+head(df)
 
 # now we should have the dataset we need; double check to make sure that every consumer is in every period
 
@@ -86,13 +88,33 @@ df[is.na(df)] <- 0
 #   in each period. Hint: if you get stuck here, take a look at Example 3 when we talked about "for-loops"
 #   call it df$recency
 
-
-
-
-
-
-
-
+#construct df$recency
+df$recency <- NA
+#loop through every id
+for (id in 1:max(df$id)){
+  #loop through years
+  for (y in 1997:1998){
+    #set up the current successful month
+    current = 0
+    #loop through the months
+    for (m in 1:12) {
+      if(current == 0){
+        df$recency[df$id == id & df$year == y & df$month == m] <- NA
+      } 
+      else{
+        df$recency[df$id == id & df$year == y & df$month == m] <- m - current
+      }
+      
+      if(length(df[df$id == id & df$year == y & df$month == m, "trips"]) > 0) {
+        if(df[df$id == 1 & df$year == y & df$month == m, "trips"] > 0){
+          #move the pointer
+          current = m
+        }
+      }
+    }  
+  }
+}
+  
 
 
 # ====== Section 3.2: frequency ======
@@ -102,8 +124,44 @@ df[is.na(df)] <- 0
 #   Next, let's define frequency purchase occasions in PAST QUARTER
 #   Call this df$frequency
 
+#construct df$recency
+df$frequency <- NA
 
+#define quarter list
+q <- list(c(1,2,3), c(4,5,6), c(7,8,9), c(10,11,12))
+names(q) <- c("q1","q2","q3","q4")
 
+#loop through every id
+for (id in 1:max(df$id)){
+  #loop through years
+  #Initialize the very first
+  first <- TRUE
+  for (y in 1997:1998){
+    #set up the current successful month
+    current = 0
+    #loop through the list every quarter
+    #sum
+    sum <- 0
+    for (l in q) {
+      temp <- 0
+      #loop every month in a quarter
+      for(m in l){
+        #if it's not the first quarter
+        if(first){
+          df$frequency[df$id == id & df$year == y & df$month == m] <- NA
+        } else{
+          df$frequency[df$id == id & df$year == y & df$month == m] <- sum
+        }
+        #sum current quarter for the next
+        temp <- temp + df$trips[df$id == id & df$year == y & df$month == m]
+      }
+      sum <- temp
+      if(!is.null(sum)){
+        first <- FALSE
+      }
+    }  
+  }
+}
 
 
 

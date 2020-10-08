@@ -92,23 +92,30 @@ head(df)
 df$recency <- NA
 #loop through every id
 for (id in 1:max(df$id)){
+  
+  #set up the counter
+  counter <- 0
+  
+  #set up the first successful month
+  first <- FALSE
+  
   #loop through years
   for (y in 1997:1998){
-    #set up the current successful month
-    current = 0
+    
     #loop through the months
     for (m in 1:12) {
-      if(current == 0){
+      if(!first){
         df$recency[df$id == id & df$year == y & df$month == m] <- NA
       } 
       else{
-        df$recency[df$id == id & df$year == y & df$month == m] <- m - current
+        counter <- counter + 1
+        df$recency[df$id == id & df$year == y & df$month == m] <- counter
       }
       
       if(length(df[df$id == id & df$year == y & df$month == m, "trips"]) > 0) {
-        if(df[df$id == 1 & df$year == y & df$month == m, "trips"] > 0){
-          #move the pointer
-          current = m
+        if(df[df$id == id & df$year == y & df$month == m, "trips"] > 0){
+          first <- TRUE
+          counter <- 0
         }
       }
     }  
@@ -120,16 +127,18 @@ for (id in 1:max(df$id)){
 # ====== Section 3.2: frequency ======
 # first define quarters and collapse/merge data sets
 #   quarters should be e.g. 1 for January-March, 1997, 2 for April-June, 1997, ...
-#   and there should be 8 quarters in the two-year period
+#   and there should be 6 quarters in the two-year period
 #   Next, let's define frequency purchase occasions in PAST QUARTER
 #   Call this df$frequency
 
 #define quarter list
 q <- list(c(1,2,3), c(4,5,6), c(7,8,9), c(10,11,12))
-df$quarter[df$month == q[[1]]] <- 1
-df$quarter[df$month == q[[2]]] <- 2
-df$quarter[df$month == q[[3]]] <- 3
-df$quarter[df$month == q[[4]]] <- 4
+df$quarter[df$year == 1997 & df$month == q[[1]]] <- 1
+df$quarter[df$year == 1997 & df$month == q[[2]]] <- 2
+df$quarter[df$year == 1997 & df$month == q[[3]]] <- 3
+df$quarter[df$year == 1997 & df$month == q[[4]]] <- 4
+df$quarter[df$year == 1998 & df$month == q[[1]]] <- 5
+df$quarter[df$year == 1998 & df$month == q[[2]]] <- 6
 names(q) <- c("q1","q2","q3","q4")
 
 #construct df$recency
@@ -233,7 +242,7 @@ df$index <- b1*df$recency + b2*df$frequency + b3*df$monvalue
 df_sort <- df[order(df$index),]
 #Split into 10 groups 
 quant <- quantile(df_sort$index,probs = seq(0,1,0.1), na.rm = TRUE)
-df_sort$group <- 0
+quant[1]
 for (i in 1:(length(quant)-1)) {
   left <- quant[[i]]
   right <- quant[[i+1]]
@@ -242,10 +251,11 @@ for (i in 1:(length(quant)-1)) {
 
 #calculate the average expenditure
 avg_expd <- aggregate(expd ~ group, data = df_sort, FUN = mean)
+avg_expd
 
 #plot
 barplot(expd ~ group, data = avg_expd,
         xlab = "deciles in the RFM indexes", ylab = "Average Expenditure",
         main = "Average Expenditure by Deciles in RFM Index",
-        ylim = c(0,20))
+        ylim = c(0,max(avg_expd$expd)))
 
